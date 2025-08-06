@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+    # MongoDB Database
+    mongodb:
+        image: mongo:7.0
+        container_name: realtime-docs-mongodb
+        restart: unless-stopped
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: admin
+            MONGO_INITDB_ROOT_PASSWORD: password123
+            MONGO_INITDB_DATABASE: realtime-docs
+        ports:
+            - "0.0.0.0:27017:27017"
+        volumes:
+            - mongodb_data:/data/db
+            - ./mongodb/init:/docker-entrypoint-initdb.d:ro
+        networks:
+            - realtime-docs-network
+        healthcheck:
+            test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+
+    # Backend API
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        container_name: realtime-docs-backend
+        restart: unless-stopped
+        environment:
+            - NODE_ENV=production
+            - DATABASE_URL=mongodb://admin:password123@mongodb:27017/realtime-docs?authSource=admin
+            - JWT_SECRET=super-secret-jwt-key-change-in-production
+            - JWT_EXPIRES_IN=7d
+            - PORT=3001
+            - FRONTEND_URL=http://frontend:3000
+        ports:
+            - "0.0.0.0:3001:3001"
+        depends_on:
+            mongodb:
+                condition: service_healthy
+        networks:
+            - realtime-docs-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+
+    # Frontend Next.js Application
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        container_name: realtime-docs-frontend
+        restart: unless-stopped
+        env_file:
+            - .env.docker
+        environment:
+            - NODE_ENV=production
+        ports:
+            - "0.0.0.0:3000:3000"
+        depends_on:
+            backend:
+                condition: service_healthy
+        networks:
+            - realtime-docs-network
+
+    # MongoDB Express (Database Admin UI) - Optional
+    mongo-express:
+        image: mongo-express:1.0.0
+        container_name: realtime-docs-mongo-express
+        restart: unless-stopped
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+            ME_CONFIG_MONGODB_ADMINPASSWORD: password123
+            ME_CONFIG_MONGODB_SERVER: mongodb
+            ME_CONFIG_MONGODB_PORT: 27017
+            ME_CONFIG_BASICAUTH_USERNAME: admin
+            ME_CONFIG_BASICAUTH_PASSWORD: admin
+        ports:
+            - "0.0.0.0:8081:8081"
+        depends_on:
+            mongodb:
+                condition: service_healthy
+        networks:
+            - realtime-docs-network
+
+volumes:
+    mongodb_data:
+        driver: local
+
+networks:
+    realtime-docs-network:
+        driver: bridge

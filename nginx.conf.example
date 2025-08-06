@@ -1,0 +1,80 @@
+# Nginx Configuration for VPS Deployment
+# Đặt file này tại: /etc/nginx/sites-available/realtime-docs
+
+server {
+    listen 80;
+    server_name YOUR_DOMAIN_OR_IP;
+
+    # Frontend (Next.js)
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+
+    # Backend API
+    location /api/ {
+        proxy_pass http://localhost:3001/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+
+    # Socket.io WebSocket
+    location /socket.io/ {
+        proxy_pass http://localhost:3001/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 86400;
+    }
+
+    # Database Admin (optional, có thể bỏ để bảo mật)
+    location /admin/ {
+        proxy_pass http://localhost:8081/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Basic authentication (tùy chọn)
+        # auth_basic "Restricted Area";
+        # auth_basic_user_file /etc/nginx/.htpasswd;
+    }
+}
+
+# SSL Configuration (after obtaining SSL certificate)
+# server {
+#     listen 443 ssl http2;
+#     server_name YOUR_DOMAIN;
+#     
+#     ssl_certificate /path/to/your/certificate.crt;
+#     ssl_certificate_key /path/to/your/private.key;
+#     
+#     # Same location blocks as above
+# }
+#
+# # Redirect HTTP to HTTPS
+# server {
+#     listen 80;
+#     server_name YOUR_DOMAIN;
+#     return 301 https://$server_name$request_uri;
+# }
