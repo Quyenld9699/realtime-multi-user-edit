@@ -1,3 +1,5 @@
+import io from "socket.io-client";
+
 export type Socket = SocketIOClient.Socket;
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
