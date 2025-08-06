@@ -5,8 +5,10 @@
     "scripts": {
         "dev": "next dev --turbopack -H 0.0.0.0",
         "build": "next build",
+        "build:skip-lint": "SKIP_LINT=true next build",
         "start": "next start -H 0.0.0.0",
-        "lint": "next lint"
+        "lint": "next lint",
+        "lint:fix": "next lint --fix"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.2.1",
