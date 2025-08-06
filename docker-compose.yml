@@ -46,7 +46,7 @@ services:
         networks:
             - realtime-docs-network
         healthcheck:
-            test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+            test: ["CMD", "sh", "-c", "nc -z localhost 3001 || exit 1"]
             interval: 30s
             timeout: 10s
             retries: 5
@@ -71,7 +71,7 @@ services:
         networks:
             - realtime-docs-network
         healthcheck:
-            test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+            test: ["CMD", "sh", "-c", "nc -z localhost 3000 || exit 1"]
             interval: 30s
             timeout: 10s
             retries: 5
