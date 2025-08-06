@@ -1,1 +1,6 @@
 .vscode/
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+backend/node_modules/
+backend/dist/
