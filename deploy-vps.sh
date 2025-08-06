@@ -29,7 +29,7 @@ JWT_EXPIRES_IN=7d
 PORT=3001
 FRONTEND_URL=http://frontend:3000
 
-# Frontend URLs for VPS
+# Frontend URLs for VPS - IMPORTANT: Use actual VPS IP for external access
 NEXT_PUBLIC_API_URL=http://$VPS_IP:3001/api
 NEXT_PUBLIC_SOCKET_URL=http://$VPS_IP:3001
 
@@ -53,14 +53,16 @@ echo "🐳 Building and starting services..."
 # Stop any existing containers
 docker-compose -f docker-compose.vps.yml down 2>/dev/null || true
 
-# Remove old containers and images to ensure clean build
+# Remove old containers and images to ensure clean build with new environment
 docker system prune -f
+docker-compose -f docker-compose.vps.yml rm -f frontend backend || true
 
-# Build and start services
-docker-compose -f docker-compose.vps.yml up --build -d
+# Build and start services with no cache to pick up new environment variables
+docker-compose -f docker-compose.vps.yml build --no-cache frontend backend
+docker-compose -f docker-compose.vps.yml up -d
 
 echo "⏳ Waiting for services to start..."
-sleep 45
+sleep 60
 
 # Check service status
 echo "📊 Service Status:"
