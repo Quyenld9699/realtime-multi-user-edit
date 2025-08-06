@@ -53,11 +53,14 @@ echo "🐳 Building and starting services..."
 # Stop any existing containers
 docker-compose -f docker-compose.vps.yml down 2>/dev/null || true
 
+# Remove old containers and images to ensure clean build
+docker system prune -f
+
 # Build and start services
 docker-compose -f docker-compose.vps.yml up --build -d
 
 echo "⏳ Waiting for services to start..."
-sleep 30
+sleep 45
 
 # Check service status
 echo "📊 Service Status:"
